@@ -1,0 +1,557 @@
+{
+  "meta": {
+    "lastUpdated": "2026-03-23T22:06:35.829802",
+    "engineVersion": "v2.3",
+    "engineStatus": "DEPLOYED",
+    "scheduledTaskActive": true
+  },
+  "account": {
+    "balance": 413.09,
+    "starting": 1000.0,
+    "startDate": "2026-02-27",
+    "goal": 10000.0,
+    "phase": 2,
+    "phases": [
+      {
+        "name": "SURVIVAL",
+        "min": 0,
+        "max": 250,
+        "exposure": 0.3
+      },
+      {
+        "name": "GROWTH",
+        "min": 250,
+        "max": 500,
+        "exposure": 0.35
+      },
+      {
+        "name": "COMPOUND",
+        "min": 500,
+        "max": 999999,
+        "exposure": 0.4
+      }
+    ],
+    "record": {
+      "wins": 24,
+      "losses": 31
+    },
+    "roi": -58.7,
+    "netPL": -586.91,
+    "bestWin": {
+      "amount": 124.79,
+      "date": "2026-03-12",
+      "desc": "Mar 12, live OKC ML"
+    },
+    "worstLoss": {
+      "amount": -248.14,
+      "date": "2026-03-19",
+      "desc": "Mar 19, 3-leg ML Triple \u2014 MIA ML \u274c, Luka 60 PTS"
+    }
+  },
+  "equityCurve": [
+    {
+      "date": "2026-02-27",
+      "balance": 1000.0
+    },
+    {
+      "date": "2026-03-18",
+      "balance": 260.78
+    },
+    {
+      "date": "2026-03-19",
+      "balance": 751.86
+    },
+    {
+      "date": "2026-03-20",
+      "balance": 602.05
+    },
+    {
+      "date": "2026-03-22",
+      "balance": 512.05
+    },
+    {
+      "date": "2026-03-23",
+      "balance": 413.09
+    }
+  ],
+  "bets": [
+    {
+      "id": 55,
+      "date": "2026-03-18",
+      "type": "3-Leg ML Triple",
+      "picks": "ATL ML \u2705 (130-115) + BOS ML \u2705 (120-99) + OKC ML \u2705 (121-92) \u2014 all 3 blowouts",
+      "risk": 48.49,
+      "pl": 30.51,
+      "result": "W",
+      "balance": 260.78
+    },
+    {
+      "id": 58,
+      "date": "2026-03-19",
+      "type": "3-Leg ML Triple",
+      "picks": "SAS ML \u2705 (101-100) + CHA ML \u2705 (130-111) + MIA ML \u274c (126-134, Luka 60 PTS)",
+      "risk": 248.14,
+      "pl": -248.14,
+      "result": "L",
+      "balance": 751.86
+    },
+    {
+      "id": 62,
+      "date": "2026-03-20",
+      "type": "3-Leg ML Triple",
+      "picks": "BOS ML \u2705 (117-112) + DET ML \u2705 (115-101) + MIN ML \u274c (104-108, POR upset)",
+      "risk": 149.81,
+      "pl": -149.81,
+      "result": "L",
+      "balance": 602.05
+    },
+    {
+      "id": 67,
+      "date": "2026-03-22",
+      "type": "3-Leg ML Triple (REDUCED)",
+      "picks": "BOS ML \u274c (92-102 vs MIN) + DEN ML \u2705 (128-112) + SAC ML \u2705 (126-122)",
+      "risk": 90.0,
+      "pl": -90.0,
+      "result": "L",
+      "balance": 512.05
+    },
+    {
+      "id": 71,
+      "date": "2026-03-23",
+      "type": "3-Leg ML Triple",
+      "picks": "SAS ML \u2705 (136-111) + ORL ML \u274c (126-128 vs IND) + ATL ML \u2705 (146-107)",
+      "risk": 98.96,
+      "pl": -98.96,
+      "result": "L",
+      "balance": 413.09
+    },
+    {
+      "id": 71,
+      "date": "2026-03-23",
+      "type": "3-Leg ML Triple",
+      "picks": "SAS ML \u2705 (136-111) + ORL ML \u274c (126-128 vs IND) + ATL ML \u2705 (146-107)",
+      "risk": 98.96,
+      "pl": -98.96,
+      "result": "L",
+      "balance": 413.09
+    }
+  ],
+  "todaysPicks": {
+    "date": "2026-03-23",
+    "games": "MIL@LAC, BKN@POR, GSW@DAL, TOR@UTA, HOU@CHI, MEM@ATL, SAS@MIA, OKC@PHI, LAL@DET, IND@ORL",
+    "bets": [
+      {
+        "label": "BET 71 \u2014 TRIPLE",
+        "type": "3-Leg ML",
+        "legs": [
+          "SAS ML (62\u00a2)",
+          "ORL ML (87\u00a2)",
+          "ATL ML (90\u00a2)"
+        ],
+        "risk": 0,
+        "payout": 0,
+        "multiplier": 0,
+        "status": "PLACED",
+        "description": "SAS ML (62\u00a2) + ORL ML (87\u00a2) + ATL ML (90\u00a2)"
+      },
+      {
+        "label": "BET 72 \u2014 OVERFLOW",
+        "type": "SKIPPED",
+        "legs": [],
+        "risk": 0,
+        "payout": 0,
+        "multiplier": 0,
+        "status": "SKIPPED"
+      },
+      {
+        "label": "BET 73 \u2014 STABILIZER",
+        "type": "SKIPPED",
+        "legs": [],
+        "risk": 0,
+        "payout": 0,
+        "multiplier": 0,
+        "status": "SKIPPED"
+      },
+      {
+        "label": "BET 74 \u2014 SWING",
+        "type": "SKIPPED",
+        "legs": [],
+        "risk": 0,
+        "payout": 0,
+        "multiplier": 0,
+        "status": "SKIPPED"
+      }
+    ],
+    "injuries": [],
+    "sessionExposure": 100.0,
+    "exposurePct": 19.5,
+    "maxProfit": 0,
+    "mlEdges": [],
+    "propEdges": []
+  },
+  "scenarios": [],
+  "correlations": [],
+  "backtest": {
+    "versions": [
+      {
+        "version": "v1.1",
+        "winner": 66.3,
+        "high": 78.3,
+        "med": 63.4,
+        "low": null,
+        "mae": 12.2,
+        "ats": 54.1,
+        "totalMae": 17.8,
+        "b2b": null,
+        "close": null
+      },
+      {
+        "version": "v2.0",
+        "winner": 65.3,
+        "high": 80.5,
+        "med": 51.7,
+        "low": 47.1,
+        "mae": 12.2,
+        "ats": 54.1,
+        "totalMae": 18.0,
+        "b2b": 55.7,
+        "close": 50.3
+      },
+      {
+        "version": "v2.1",
+        "winner": 65.3,
+        "high": 73.6,
+        "med": 53.1,
+        "low": 58.1,
+        "mae": 12.9,
+        "ats": 48.8,
+        "totalMae": 16.1,
+        "b2b": 66.0,
+        "close": 54.1
+      },
+      {
+        "version": "v2.2",
+        "winner": 65.0,
+        "high": 73.7,
+        "med": 50.5,
+        "low": 60.6,
+        "mae": 12.8,
+        "ats": 48.8,
+        "totalMae": 16.1,
+        "b2b": 64.9,
+        "close": 52.4
+      },
+      {
+        "version": "v2.3",
+        "winner": 69.0,
+        "high": 80.7,
+        "med": 54.7,
+        "low": 68.3,
+        "mae": 12.3,
+        "ats": 57.1,
+        "totalMae": 16.1,
+        "b2b": 64.9,
+        "close": 57.0
+      }
+    ],
+    "calibration": [
+      {
+        "bin": "50-60%",
+        "actual": 57.5,
+        "n": 80
+      },
+      {
+        "bin": "60-70%",
+        "actual": 59.0,
+        "n": 78
+      },
+      {
+        "bin": "70-80%",
+        "actual": 78.9,
+        "n": 71
+      },
+      {
+        "bin": "80-90%",
+        "actual": 82.4,
+        "n": 74
+      }
+    ],
+    "monthlyTrend": [
+      {
+        "month": "Jan",
+        "pct": 57.7
+      },
+      {
+        "month": "Feb",
+        "pct": 69.9
+      },
+      {
+        "month": "Mar",
+        "pct": 74.1
+      }
+    ]
+  },
+  "ablation": [
+    {
+      "config": "no_injury",
+      "winner": 66.7,
+      "high": 78.0,
+      "med": 52.7,
+      "low": 65.2,
+      "delta": 3.5
+    },
+    {
+      "config": "minimal_v1style",
+      "winner": 66.1,
+      "high": 80.1,
+      "med": 55.5,
+      "low": 52.9,
+      "delta": 2.9
+    },
+    {
+      "config": "best_of_both",
+      "winner": 65.8,
+      "high": 79.6,
+      "med": 55.1,
+      "low": 52.9,
+      "delta": 2.7
+    },
+    {
+      "config": "no_clutch",
+      "winner": 63.4,
+      "high": 70.6,
+      "med": 50.9,
+      "low": 61.8,
+      "delta": 0.3
+    },
+    {
+      "config": "v2.2_baseline",
+      "winner": 63.1,
+      "high": 70.6,
+      "med": 50.9,
+      "low": 58.8,
+      "delta": 0.0
+    },
+    {
+      "config": "no_altitude",
+      "winner": 63.1,
+      "high": 70.6,
+      "med": 50.5,
+      "low": 60.0,
+      "delta": 0.0
+    },
+    {
+      "config": "no_rest_diff",
+      "winner": 62.5,
+      "high": 71.0,
+      "med": 54.7,
+      "low": 42.5,
+      "delta": -0.6
+    },
+    {
+      "config": "no_fatigue",
+      "winner": 62.5,
+      "high": 71.5,
+      "med": 50.0,
+      "low": 53.3,
+      "delta": -0.6
+    },
+    {
+      "config": "no_elo",
+      "winner": 62.2,
+      "high": 70.8,
+      "med": 50.0,
+      "low": 54.3,
+      "delta": -0.9
+    }
+  ],
+  "props": {
+    "strong65": [
+      {
+        "prop": "PTS 15+",
+        "hits": 711,
+        "total": 900,
+        "pct": 79.0
+      },
+      {
+        "prop": "PTS 20+",
+        "hits": 279,
+        "total": 387,
+        "pct": 72.1
+      },
+      {
+        "prop": "PTS 25+",
+        "hits": 59,
+        "total": 100,
+        "pct": 59.0
+      },
+      {
+        "prop": "REB 4+",
+        "hits": 560,
+        "total": 667,
+        "pct": 84.0
+      },
+      {
+        "prop": "REB 6+",
+        "hits": 243,
+        "total": 306,
+        "pct": 79.4
+      },
+      {
+        "prop": "REB 8+",
+        "hits": 111,
+        "total": 140,
+        "pct": 79.3
+      },
+      {
+        "prop": "AST 2+",
+        "hits": 862,
+        "total": 947,
+        "pct": 91.0
+      },
+      {
+        "prop": "AST 4+",
+        "hits": 395,
+        "total": 480,
+        "pct": 82.3
+      },
+      {
+        "prop": "AST 6+",
+        "hits": 136,
+        "total": 185,
+        "pct": 73.5
+      },
+      {
+        "prop": "3PT 1+",
+        "hits": 675,
+        "total": 769,
+        "pct": 87.8
+      },
+      {
+        "prop": "3PT 2+",
+        "hits": 241,
+        "total": 331,
+        "pct": 72.8
+      },
+      {
+        "prop": "3PT 3+",
+        "hits": 54,
+        "total": 82,
+        "pct": 65.9
+      }
+    ]
+  },
+  "engine": {
+    "features": [
+      {
+        "name": "Elo Ratings",
+        "weight": "20%",
+        "status": "active",
+        "impact": "Stability"
+      },
+      {
+        "name": "Bayesian L10",
+        "weight": "\u2014",
+        "status": "active",
+        "impact": "+11pp LOW conf"
+      },
+      {
+        "name": "Margin Capping",
+        "weight": "\u00b115",
+        "status": "active",
+        "impact": "Noise reduction"
+      },
+      {
+        "name": "Injury Proxy",
+        "weight": "\u2014",
+        "status": "DISABLED",
+        "impact": "Was -3.5pp (ablation)"
+      },
+      {
+        "name": "Vegas Anchor",
+        "weight": "30%",
+        "status": "live-only",
+        "impact": "Untested in backtest"
+      },
+      {
+        "name": "Rest Differential",
+        "weight": "0.6/day",
+        "status": "active",
+        "impact": "+0.6pp"
+      },
+      {
+        "name": "Referee Model",
+        "weight": "\u2014",
+        "status": "live-only",
+        "impact": "Untested in backtest"
+      },
+      {
+        "name": "Denver Altitude",
+        "weight": "-1.5pts",
+        "status": "active",
+        "impact": "81.8% DEN games"
+      },
+      {
+        "name": "Clutch Model",
+        "weight": "25%",
+        "status": "active",
+        "impact": "+3.8pp close games"
+      },
+      {
+        "name": "Confidence Cap",
+        "weight": "88%",
+        "status": "active",
+        "impact": "Calibration fix"
+      },
+      {
+        "name": "Fatigue (recal)",
+        "weight": "-0.8",
+        "status": "active",
+        "impact": "+10.3pp B2B"
+      }
+    ],
+    "constants": {
+      "B2B_PENALTY": -0.8,
+      "ELO_BLEND": 0.2,
+      "CONFIDENCE_CAP": 0.88,
+      "LOGISTIC_K": 11.5,
+      "SPREAD_REGRESS": 0.68,
+      "HOME_COURT_ADV": 2.5,
+      "BAYESIAN_PRIOR": 10
+    }
+  },
+  "strategy": {
+    "name": "V5.1 Triple Threat",
+    "betA": {
+      "name": "THE TRIPLE",
+      "desc": "3-leg ML parlay, 70% exposure",
+      "target": "2.5-3.5x"
+    },
+    "betB": {
+      "name": "THE STABILIZER",
+      "desc": "1-2 straight prop YES, 20% exposure",
+      "cushion": "\u22655 units"
+    },
+    "betC": {
+      "name": "THE SWING",
+      "desc": "3-leg ML+prop combo, 10% exposure",
+      "maxRisk": "$10"
+    },
+    "killList": [
+      "2-leg parlays",
+      "Spreads",
+      "4+ leg parlays",
+      "Moonshots",
+      "Prop-only combos"
+    ],
+    "hardRules": [
+      "3-LEG ONLY for parlays",
+      "No team in more than 2/3 session bets",
+      "Bidirectional blowout filter (7+ spread)",
+      "Return-from-injury form check mandatory",
+      "Stabilizer cushion bar \u22655 units",
+      "Prefer HOME favorites for Triple",
+      "No play is always valid"
+    ]
+  }
+}

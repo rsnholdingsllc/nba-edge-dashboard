@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Edge Engine Dashboard</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0e17;--card:#111827;--card2:#1a2234;--border:#1e293b;--text:#e2e8f0;--muted:#94a3b8;--green:#22c55e;--red:#ef4444;--blue:#3b82f6;--amber:#f59e0b;--purple:#a855f7;--cyan:#06b6d4;--emerald:#10b981}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);line-height:1.5;min-height:100vh}
+a{color:var(--blue)}
+.container{max-width:1280px;margin:0 auto;padding:16px}
+.header{display:flex;align-items:center;justify-content:space-between;padding:16px 0;border-bottom:1px solid var(--border);margin-bottom:20px;flex-wrap:wrap;gap:8px}
+.header h1{font-size:1.5rem;font-weight:700;letter-spacing:-0.02em}
+.header h1 span{color:var(--green)}
+.badges{display:flex;gap:8px;flex-wrap:wrap}
+.badge{padding:3px 10px;border-radius:999px;font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em}
+.badge-green{background:#22c55e22;color:var(--green);border:1px solid #22c55e44}
+.badge-blue{background:#3b82f622;color:var(--blue);border:1px solid #3b82f644}
+.badge-amber{background:#f59e0b22;color:var(--amber);border:1px solid #f59e0b44}
+.badge-purple{background:#a855f722;color:var(--purple);border:1px solid #a855f744}
+.badge-red{background:#ef444422;color:var(--red);border:1px solid #ef444444}
+.grid{display:grid;gap:16px}
+.grid-4{grid-template-columns:repeat(4,1fr)}
+.grid-3{grid-template-columns:repeat(3,1fr)}
+.grid-2{grid-template-columns:repeat(2,1fr)}
+.grid-1{grid-template-columns:1fr}
+@media(max-width:900px){.grid-4,.grid-3{grid-template-columns:repeat(2,1fr)}.grid-2{grid-template-columns:1fr}}
+@media(max-width:600px){.grid-4,.grid-3,.grid-2{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;position:relative;overflow:hidden}
+.card-dark{background:var(--card2)}
+.card h2{font-size:0.75rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:8px;font-weight:600}
+.card .big{font-size:2rem;font-weight:700;letter-spacing:-0.02em}
+.card .sub{font-size:0.8rem;color:var(--muted);margin-top:4px}
+.positive{color:var(--green)}
+.negative{color:var(--red)}
+.progress-bar{width:100%;height:8px;background:#1e293b;border-radius:4px;overflow:hidden;margin-top:8px}
+.progress-fill{height:100%;border-radius:4px;transition:width 0.5s}
+table{width:100%;border-collapse:collapse;font-size:0.8rem}
+th{text-align:left;padding:8px 10px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--border);font-size:0.7rem;text-transform:uppercase;letter-spacing:0.05em}
+td{padding:8px 10px;border-bottom:1px solid #1e293b44}
+tr:hover{background:#ffffff06}
+.status-pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:0.65rem;font-weight:600}
+.status-W{background:#22c55e22;color:var(--green)}
+.status-L{background:#ef444422;color:var(--red)}
+.status-PLACED{background:#3b82f622;color:var(--blue)}
+.status-PENDING{background:#f59e0b22;color:var(--amber)}
+.status-SKIPPED{background:#64748b22;color:#64748b}
+.scenario-grid{display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}
+.scenario-card{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;font-size:0.8rem}
+.scenario-card.best{border-color:var(--green);background:#22c55e08}
+.scenario-card.worst{border-color:var(--red);background:#ef444408}
+.chart-wrap{position:relative;height:220px}
+.leg-tag{display:inline-block;padding:2px 8px;margin:2px;border-radius:4px;background:#1e293b;font-size:0.75rem;color:var(--text)}
+.injury-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #1e293b44;font-size:0.8rem}
+.injury-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.feature-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid #1e293b44;font-size:0.8rem}
+.feature-status{font-size:0.65rem;padding:2px 6px;border-radius:4px;font-weight:600}
+.kill-tag{display:inline-block;padding:3px 10px;margin:3px;border-radius:4px;background:#ef444418;color:var(--red);font-size:0.75rem;border:1px solid #ef444433}
+.rule-item{padding:6px 0;border-bottom:1px solid #1e293b44;font-size:0.8rem}
+.prop-bar{display:flex;align-items:center;gap:8px;padding:4px 0;font-size:0.8rem}
+.prop-bar-track{flex:1;height:6px;background:#1e293b;border-radius:3px;overflow:hidden}
+.prop-bar-fill{height:100%;border-radius:3px}
+.section-title{font-size:1.1rem;font-weight:700;margin:24px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.footer{text-align:center;padding:24px 0;color:var(--muted);font-size:0.75rem;border-top:1px solid var(--border);margin-top:24px}
+.loading{display:flex;align-items:center;justify-content:center;min-height:60vh;font-size:1.2rem;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="container" id="app">
+<div class="loading">Loading dashboard data...</div>
+</div>
+<script>
+const $ = s => document.querySelector(s);
+const h = (tag, cls, inner) => {
+  const el = document.createElement(tag);
+  if (cls) el.className = cls;
+  if (typeof inner === 'string') el.innerHTML = inner;
+  else if (inner instanceof HTMLElement) el.appendChild(inner);
+  return el;
+};
+
+async function loadDashboard() {
+  let d;
+  try {
+    const r = await fetch('./data/dashboard.json?t=' + Date.now());
+    d = await r.json();
+  } catch (e) {
+    $('#app').innerHTML = '<div class="loading">Failed to load dashboard.json</div>';
+    return;
+  }
+  render(d);
+}
+
+function render(d) {
+  const app = $('#app');
+  app.innerHTML = '';
+
+  const a = d.account || {};
+  const m = d.meta || {};
+  const tp = d.todaysPicks || {};
+  const bets = d.bets || [];
+  const scenarios = d.scenarios || [];
+  const bt = d.backtest || {};
+  const eng = d.engine || {};
+  const strat = d.strategy || {};
+  const props = d.props || {};
+  const ablation = d.ablation || [];
+  const ec = d.equityCurve || [];
+
+  const bal = a.balance || 0;
+  const goal = a.goal || 10000;
+  const wins = a.record?.wins || 0;
+  const losses = a.record?.losses || 0;
+  const phase = a.phase || 1;
+  const phaseNames = {1:'SURVIVAL',2:'GROWTH',3:'COMPOUND'};
+  const phaseColors = {1:'amber',2:'blue',3:'green'};
+  const pctToGoal = Math.min(100, (bal / goal * 100)).toFixed(1);
+  const winRate = (wins + losses) > 0 ? (wins / (wins + losses) * 100).toFixed(1) : '0.0';
+
+  // Header
+  const header = h('div','header',`
+    <div>
+      <h1>📊 <span>Edge Engine</span> Dashboard</h1>
+      <div style="font-size:0.75rem;color:var(--muted);margin-top:2px">
+        ${m.engineVersion || 'v2.3'} • ${m.engineStatus || 'DEPLOYED'} • Updated ${new Date(m.lastUpdated).toLocaleString()}
+      </div>
+    </div>
+    <div class="badges">
+      <span class="badge badge-${phaseColors[phase]}">Phase ${phase}: ${phaseNames[phase]}</span>
+      <span class="badge badge-green">Engine Active</span>
+    </div>
+  `);
+  app.appendChild(header);
+
+  // Row 1: Hero stats
+  const heroGrid = h('div','grid grid-4');
+  heroGrid.innerHTML = `
+    <div class="card">
+      <h2>💰 Balance</h2>
+      <div class="big ${bal >= (a.starting||0) ? 'positive' : 'negative'}">$${bal.toLocaleString('en-US',{minimumFractionDigits:2})}</div>
+      <div class="sub">${a.netPL >= 0 ? '+' : ''}$${(a.netPL||0).toFixed(2)} (${(a.roi||0).toFixed(1)}% ROI)</div>
+    </div>
+    <div class="card">
+      <h2>🎯 Goal Progress</h2>
+      <div class="big">${pctToGoal}%</div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pctToGoal}%;background:linear-gradient(90deg,var(--blue),var(--green))"></div></div>
+      <div class="sub">$${bal.toFixed(0)} / $${goal.toLocaleString()}</div>
+    </div>
+    <div class="card">
+      <h2>📊 Record</h2>
+      <div class="big">${wins}W-${losses}L</div>
+      <div class="sub">${winRate}% win rate</div>
+    </div>
+    <div class="card">
+      <h2>🧠 Model Accuracy</h2>
+      <div class="big">${(bt.versions?.slice(-1)[0]?.winner||0).toFixed(1)}%</div>
+      <div class="sub">HIGH conf: ${(bt.versions?.slice(-1)[0]?.high||0).toFixed(1)}%</div>
+    </div>
+  `;
+  app.appendChild(heroGrid);
+
+  // Row 2: Equity Curve + Today's Picks
+  const r2 = h('div','grid grid-2','');
+  r2.style.marginTop = '16px';
+
+  // Equity Curve
+  const ecCard = h('div','card','');
+  ecCard.innerHTML = `<h2>📈 Equity Curve</h2><div class="chart-wrap"><canvas id="ecChart"></canvas></div>`;
+  r2.appendChild(ecCard);
+
+  // Today's Picks
+  const tpCard = h('div','card','');
+  let tpHTML = `<h2>🏀 Today's Picks — ${tp.date || 'N/A'}</h2>`;
+  if (tp.bets && tp.bets.length > 0) {
+    tpHTML += `<div style="font-size:0.75rem;color:var(--muted);margin-bottom:12px">${tp.games || ''}</div>`;
+    tp.bets.forEach(b => {
+      const isSkip = b.status === 'SKIPPED';
+      const statusCls = `status-${b.result === 'W' ? 'W' : b.result === 'L' ? 'L' : b.status === 'PLACED' ? 'PLACED' : b.status === 'SKIPPED' ? 'SKIPPED' : 'PENDING'}`;
+      tpHTML += `<div style="padding:10px;margin-bottom:8px;background:var(--card2);border-radius:8px;border:1px solid var(--border)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <strong style="font-size:0.85rem">${b.label}</strong>
+          <span class="status-pill ${statusCls}">${b.status}</span>
+        </div>`;
+      if (!isSkip && b.legs?.length > 0) {
+        tpHTML += `<div style="margin-bottom:6px">${b.legs.map(l => `<span class="leg-tag">${l}</span>`).join('')}</div>`;
+        tpHTML += `<div style="display:flex;gap:16px;font-size:0.75rem;color:var(--muted)">
+          <span>Risk: $${b.risk?.toFixed(2)||'0'}</span>
+          <span>Payout: $${b.payout?.toFixed(0)||'0'}</span>
+          <span>${b.multiplier?.toFixed(2)||'0'}x</span>
+        </div>`;
+      } else if (isSkip) {
+        tpHTML += `<div style="font-size:0.75rem;color:var(--muted)">No qualifying edges</div>`;
+      }
+      tpHTML += '</div>';
+    });
+    if (tp.sessionExposure > 0) {
+      tpHTML += `<div style="font-size:0.75rem;color:var(--muted);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+        Session exposure: $${tp.sessionExposure.toFixed(0)} (${tp.exposurePct.toFixed(1)}%) • Max profit: $${(tp.maxProfit||0).toFixed(0)}
+      </div>`;
+    }
+  } else {
+    tpHTML += '<div style="color:var(--muted);font-size:0.85rem;padding:20px 0">No picks today</div>';
+  }
+  tpCard.innerHTML = tpHTML;
+  r2.appendChild(tpCard);
+  app.appendChild(r2);
+
+  // Row 3: Scenarios + Injuries
+  if (scenarios.length > 0 || (tp.injuries && tp.injuries.length > 0)) {
+    const r3 = h('div','grid grid-2','');
+    r3.style.marginTop = '16px';
+
+    const scCard = h('div','card','');
+    let scHTML = '<h2>🎲 Tonight\'s Scenarios</h2><div class="scenario-grid">';
+    scenarios.forEach((s, i) => {
+      const cls = i === 0 ? 'best' : i === scenarios.length - 1 ? 'worst' : '';
+      const icons = s.bets.map(b => b.result === 'W' ? '✅' : '❌').join('');
+      scHTML += `<div class="scenario-card ${cls}">
+        <div style="font-size:1.1rem;margin-bottom:4px">${icons}</div>
+        <div style="font-size:1.2rem;font-weight:700" class="${s.totalPL >= 0 ? 'positive' : 'negative'}">
+          ${s.totalPL >= 0 ? '+' : ''}$${s.totalPL.toFixed(2)}
+        </div>
+        <div style="font-size:0.75rem;color:var(--muted)">→ $${s.newBalance.toFixed(2)}</div>
+        <div style="font-size:0.65rem;margin-top:4px"><span class="badge badge-${phaseColors[s.phase]}" style="font-size:0.6rem">P${s.phase}</span></div>
+      </div>`;
+    });
+    scHTML += '</div>';
+    scCard.innerHTML = scHTML;
+    r3.appendChild(scCard);
+
+    // Injuries
+    const injCard = h('div','card','');
+    let injHTML = '<h2>🏥 Injury Watch</h2>';
+    if (tp.injuries && tp.injuries.length > 0) {
+      tp.injuries.forEach(inj => {
+        const dotColor = inj.status === 'OUT' ? 'var(--red)' : inj.status === 'GTD' || inj.status === 'QUESTIONABLE' ? 'var(--amber)' : 'var(--green)';
+        injHTML += `<div class="injury-row">
+          <div class="injury-dot" style="background:${dotColor}"></div>
+          <strong>${inj.player}</strong>
+          <span style="color:var(--muted)">(${inj.team})</span>
+          <span class="badge badge-${inj.status==='OUT'?'red':'amber'}" style="font-size:0.6rem">${inj.status}</span>
+          ${inj.note ? `<span style="color:var(--muted);font-size:0.7rem">${inj.note}</span>` : ''}
+        </div>`;
+      });
+    } else {
+      injHTML += '<div style="color:var(--muted);font-size:0.85rem;padding:16px 0">No injury data available — check MEMORY.md</div>';
+    }
+    injCard.innerHTML = injHTML;
+    r3.appendChild(injCard);
+    app.appendChild(r3);
+  }
+
+  // Row 4: Backtest Charts
+  app.appendChild(h('div','section-title','📉 Model Performance'));
+  const r4 = h('div','grid grid-3','');
+  r4.innerHTML = `
+    <div class="card"><h2>Model Evolution</h2><div class="chart-wrap"><canvas id="btChart"></canvas></div></div>
+    <div class="card"><h2>Probability Calibration</h2><div class="chart-wrap"><canvas id="calChart"></canvas></div></div>
+    <div class="card"><h2>Monthly Trend</h2><div class="chart-wrap"><canvas id="trendChart"></canvas></div></div>
+  `;
+  app.appendChild(r4);
+
+  // Row 5: Ablation + Engine Features
+  const r5 = h('div','grid grid-2','');
+  r5.style.marginTop = '16px';
+
+  // Ablation
+  const ablCard = h('div','card','');
+  ablCard.innerHTML = `<h2>🔬 Feature Ablation Study</h2><div class="chart-wrap" style="height:260px"><canvas id="ablChart"></canvas></div>`;
+  r5.appendChild(ablCard);
+
+  // Engine Features
+  const engCard = h('div','card','');
+  let engHTML = '<h2>⚙️ Engine Feature Stack</h2>';
+  (eng.features || []).forEach(f => {
+    const sc = f.status === 'active' ? 'green' : f.status === 'DISABLED' ? 'red' : 'amber';
+    engHTML += `<div class="feature-row">
+      <span>${f.name} <span style="color:var(--muted);font-size:0.7rem">${f.weight||''}</span></span>
+      <span><span class="feature-status" style="background:var(--${sc})22;color:var(--${sc})">${f.status}</span> <span style="font-size:0.7rem;color:var(--muted)">${f.impact||''}</span></span>
+    </div>`;
+  });
+  engCard.innerHTML = engHTML;
+  r5.appendChild(engCard);
+  app.appendChild(r5);
+
+  // Row 6: Prop Performance
+  const propData = props.strong65 || [];
+  if (propData.length > 0) {
+    app.appendChild(h('div','section-title','🎯 Player Prop Backtest (65%+ Confidence)'));
+    const r6 = h('div','grid grid-4','');
+    const categories = [
+      {name:'Points',icon:'🏀',filter:p=>p.prop.includes('PTS')},
+      {name:'Rebounds',icon:'📏',filter:p=>p.prop.includes('REB')},
+      {name:'Assists',icon:'🤝',filter:p=>p.prop.includes('AST')},
+      {name:'Threes',icon:'🎯',filter:p=>p.prop.includes('3PT')},
+    ];
+    categories.forEach(cat => {
+      const items = propData.filter(cat.filter);
+      let cardHTML = `<div class="card"><h2>${cat.icon} ${cat.name}</h2>`;
+      items.forEach(p => {
+        const color = p.pct >= 80 ? 'var(--green)' : p.pct >= 70 ? 'var(--blue)' : p.pct >= 60 ? 'var(--amber)' : 'var(--red)';
+        cardHTML += `<div class="prop-bar">
+          <span style="width:60px;flex-shrink:0;font-size:0.75rem">${p.prop}</span>
+          <div class="prop-bar-track"><div class="prop-bar-fill" style="width:${p.pct}%;background:${color}"></div></div>
+          <span style="width:45px;text-align:right;font-weight:600;font-size:0.75rem;color:${color}">${p.pct}%</span>
+        </div>`;
+      });
+      cardHTML += '</div>';
+      r6.innerHTML += cardHTML;
+    });
+    app.appendChild(r6);
+  }
+
+  // Row 7: Bet History + Strategy
+  const r7 = h('div','grid grid-2','');
+  r7.style.marginTop = '16px';
+
+  // Bet History
+  const bhCard = h('div','card','');
+  let bhHTML = '<h2>📋 Recent Bet History</h2><div style="overflow-x:auto"><table><thead><tr><th>#</th><th>Date</th><th>Type</th><th>Picks</th><th>Risk</th><th>P/L</th><th>Result</th></tr></thead><tbody>';
+  bets.slice(-10).reverse().forEach(b => {
+    const rc = b.result === 'W' ? 'positive' : b.result === 'L' ? 'negative' : '';
+    bhHTML += `<tr>
+      <td>${b.id}</td>
+      <td>${b.date?.split('-').slice(1).join('/')}</td>
+      <td style="font-size:0.7rem">${b.type}</td>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:0.7rem">${b.picks}</td>
+      <td>$${b.risk?.toFixed(0)}</td>
+      <td class="${rc}">${b.pl != null ? (b.pl >= 0 ? '+' : '') + '$' + b.pl.toFixed(2) : '—'}</td>
+      <td><span class="status-pill status-${b.result||'PENDING'}">${b.result||'⏳'}</span></td>
+    </tr>`;
+  });
+  bhHTML += '</tbody></table></div>';
+  bhCard.innerHTML = bhHTML;
+  r7.appendChild(bhCard);
+
+  // Strategy
+  const strCard = h('div','card','');
+  let strHTML = `<h2>📐 ${strat.name || 'Strategy'}</h2>`;
+  ['betA','betB','betC'].forEach(k => {
+    const b = strat[k];
+    if (b) strHTML += `<div style="padding:8px 0;border-bottom:1px solid #1e293b44">
+      <strong style="font-size:0.85rem">${b.name}</strong>
+      <div style="font-size:0.75rem;color:var(--muted)">${b.desc}${b.target ? ' • Target: '+b.target : ''}${b.cushion ? ' • Cushion: '+b.cushion : ''}</div>
+    </div>`;
+  });
+  if (strat.killList) {
+    strHTML += `<div style="margin-top:12px"><h2 style="margin-bottom:6px">☠️ Kill List</h2>${strat.killList.map(k => `<span class="kill-tag">❌ ${k}</span>`).join('')}</div>`;
+  }
+  if (strat.hardRules) {
+    strHTML += `<div style="margin-top:12px"><h2 style="margin-bottom:6px">⚖️ Hard Rules</h2>`;
+    strat.hardRules.forEach(r => { strHTML += `<div class="rule-item">• ${r}</div>`; });
+    strHTML += '</div>';
+  }
+  strCard.innerHTML = strHTML;
+  r7.appendChild(strCard);
+  app.appendChild(r7);
+
+  // Footer
+  const footer = h('div','footer',`
+    Edge Engine ${m.engineVersion||'v2.3'} • Backtest: ${bt.versions?.length||0} versions, ${(bt.versions?.slice(-1)[0]?.winner||0).toFixed(1)}% winner accuracy •
+    Phase ${phase} ${phaseNames[phase]} • $${bal.toFixed(2)} / $${goal.toLocaleString()} goal
+  `);
+  app.appendChild(footer);
+
+  // --- CHARTS ---
+  const chartDefaults = {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { labels: { color: '#94a3b8', font: { size: 10 } } } },
+    scales: {
+      x: { ticks: { color: '#64748b', font: { size: 10 } }, grid: { color: '#1e293b' } },
+      y: { ticks: { color: '#64748b', font: { size: 10 } }, grid: { color: '#1e293b' } }
+    }
+  };
+
+  // Equity Curve
+  if (ec.length > 0) {
+    const ecCtx = document.getElementById('ecChart');
+    new Chart(ecCtx, {
+      type: 'line',
+      data: {
+        labels: ec.map(p => p.date?.split('-').slice(1).join('/')),
+        datasets: [{
+          label: 'Balance',
+          data: ec.map(p => p.balance),
+          borderColor: '#22c55e',
+          backgroundColor: '#22c55e22',
+          fill: true,
+          tension: 0.3,
+          pointRadius: 3,
+          pointBackgroundColor: '#22c55e',
+        }]
+      },
+      options: { ...chartDefaults,
+        plugins: { ...chartDefaults.plugins, legend: { display: false } },
+        scales: { ...chartDefaults.scales, y: { ...chartDefaults.scales.y, ticks: { ...chartDefaults.scales.y.ticks, callback: v => '$' + v } } }
+      }
+    });
+  }
+
+  // Backtest versions
+  const versions = bt.versions || [];
+  if (versions.length > 0) {
+    new Chart(document.getElementById('btChart'), {
+      type: 'bar',
+      data: {
+        labels: versions.map(v => v.version),
+        datasets: [
+          { label: 'Overall', data: versions.map(v => v.winner), backgroundColor: '#3b82f6' },
+          { label: 'HIGH', data: versions.map(v => v.high), backgroundColor: '#22c55e' },
+          { label: 'MED', data: versions.map(v => v.med), backgroundColor: '#f59e0b' },
+        ]
+      },
+      options: { ...chartDefaults, scales: { ...chartDefaults.scales, y: { ...chartDefaults.scales.y, min: 40, max: 90 } } }
+    });
+  }
+
+  // Calibration
+  const cal = bt.calibration || [];
+  if (cal.length > 0) {
+    const expected = [55, 65, 75, 85];
+    new Chart(document.getElementById('calChart'), {
+      type: 'bar',
+      data: {
+        labels: cal.map(c => c.bin),
+        datasets: [
+          { label: 'Actual', data: cal.map(c => c.actual), backgroundColor: '#3b82f6' },
+          { label: 'Expected', data: expected.slice(0, cal.length), backgroundColor: '#64748b44', borderColor: '#64748b', borderWidth: 1 },
+        ]
+      },
+      options: { ...chartDefaults, scales: { ...chartDefaults.scales, y: { ...chartDefaults.scales.y, min: 40, max: 100 } } }
+    });
+  }
+
+  // Monthly trend
+  const mt = bt.monthlyTrend || [];
+  if (mt.length > 0) {
+    new Chart(document.getElementById('trendChart'), {
+      type: 'line',
+      data: {
+        labels: mt.map(m => m.month),
+        datasets: [{ label: 'Accuracy', data: mt.map(m => m.pct), borderColor: '#a855f7', backgroundColor: '#a855f722', fill: true, tension: 0.3, pointRadius: 4, pointBackgroundColor: '#a855f7' }]
+      },
+      options: { ...chartDefaults, scales: { ...chartDefaults.scales, y: { ...chartDefaults.scales.y, min: 50, max: 85 } },
+        plugins: { ...chartDefaults.plugins, legend: { display: false } } }
+    });
+  }
+
+  // Ablation
+  if (ablation.length > 0) {
+    const sorted = [...ablation].sort((a, b) => a.winner - b.winner);
+    new Chart(document.getElementById('ablChart'), {
+      type: 'bar',
+      data: {
+        labels: sorted.map(a => a.config.replace(/_/g, ' ')),
+        datasets: [{ label: 'Winner %', data: sorted.map(a => a.winner), backgroundColor: sorted.map(a => a.delta >= 0 ? '#22c55e88' : '#ef444488'), borderColor: sorted.map(a => a.delta >= 0 ? '#22c55e' : '#ef4444'), borderWidth: 1 }]
+      },
+      options: {
+        ...chartDefaults, indexAxis: 'y',
+        scales: { x: { ...chartDefaults.scales.x, min: 58, max: 70 }, y: { ...chartDefaults.scales.y, ticks: { ...chartDefaults.scales.y.ticks, font: { size: 9 } } } },
+        plugins: { ...chartDefaults.plugins, legend: { display: false } }
+      }
+    });
+  }
+}
+
+loadDashboard();
+</script>
+</body>
+</html>
