@@ -48,13 +48,13 @@ tr:hover{background:#ffffff06}
 .status-PLACED{background:#3b82f622;color:var(--blue)}
 .status-PENDING{background:#f59e0b22;color:var(--amber)}
 .status-SKIPPED{background:#64748b22;color:#64748b}
-.scenario-grid{display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}
-.scenario-card{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;font-size:0.8rem}
+.scenario-grid{display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}
+.scenario-card{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;font-size:0.8rem;transition:transform 0.15s}
+.scenario-card:hover{transform:translateY(-2px)}
 .scenario-card.best{border-color:var(--green);background:#22c55e08}
 .scenario-card.worst{border-color:var(--red);background:#ef444408}
 .chart-wrap{position:relative;height:220px}
-.leg-tag{display:inline-block;padding:2px 8px;margin:2px;border-radius:4px;background:#1e293b;font-size:0.75rem;color:var(--text)}
-.injury-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #1e293b44;font-size:0.8rem}
+.injury-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #1e293b44;font-size:0.8rem;flex-wrap:wrap}
 .injury-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 .feature-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid #1e293b44;font-size:0.8rem}
 .feature-status{font-size:0.65rem;padding:2px 6px;border-radius:4px;font-weight:600}
@@ -66,6 +66,18 @@ tr:hover{background:#ffffff06}
 .section-title{font-size:1.1rem;font-weight:700;margin:24px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
 .footer{text-align:center;padding:24px 0;color:var(--muted);font-size:0.75rem;border-top:1px solid var(--border);margin-top:24px}
 .loading{display:flex;align-items:center;justify-content:center;min-height:60vh;font-size:1.2rem;color:var(--muted)}
+.bet-card{padding:12px;margin-bottom:10px;background:var(--card2);border-radius:10px;border:1px solid var(--border);transition:border-color 0.15s}
+.bet-card:hover{border-color:#3b82f644}
+.bet-card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.bet-card-pick{font-weight:700;font-size:0.95rem}
+.bet-card-type{font-size:0.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em}
+.bet-card-thesis{font-size:0.78rem;color:var(--muted);margin-bottom:8px;line-height:1.4}
+.bet-card-stats{display:flex;gap:16px;font-size:0.75rem;color:var(--muted);flex-wrap:wrap}
+.bet-card-stats span{display:flex;align-items:center;gap:4px}
+.edge-badge{padding:2px 8px;border-radius:999px;font-size:0.7rem;font-weight:700;background:#22c55e22;color:var(--green);border:1px solid #22c55e44}
+.edge-badge.hot{background:#ef444422;color:#f97316;border:1px solid #f9731644;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.7}}
+.corr-note{font-size:0.75rem;color:var(--muted);padding:4px 0}
 </style>
 </head>
 <body>
@@ -109,6 +121,7 @@ function render(d) {
   const props = d.props || {};
   const ablation = d.ablation || [];
   const ec = d.equityCurve || [];
+  const correlations = d.correlations || [];
 
   const bal = a.balance || 0;
   const goal = a.goal || 10000;
@@ -125,12 +138,13 @@ function render(d) {
     <div>
       <h1>📊 <span>Edge Engine</span> Dashboard</h1>
       <div style="font-size:0.75rem;color:var(--muted);margin-top:2px">
-        ${m.engineVersion || 'v2.3'} • ${m.engineStatus || 'DEPLOYED'} • Updated ${new Date(m.lastUpdated).toLocaleString()}
+        ${m.engineVersion || 'v2.3'} · ${m.engineStatus || 'DEPLOYED'} · Updated ${new Date(m.lastUpdated).toLocaleString()}
       </div>
     </div>
     <div class="badges">
       <span class="badge badge-${phaseColors[phase]}">Phase ${phase}: ${phaseNames[phase]}</span>
       <span class="badge badge-green">Engine Active</span>
+      ${m.scheduledTaskActive ? '<span class="badge badge-purple">Auto-Reports ON</span>' : ''}
     </div>
   `);
   app.appendChild(header);
@@ -171,35 +185,40 @@ function render(d) {
   ecCard.innerHTML = `<h2>📈 Equity Curve</h2><div class="chart-wrap"><canvas id="ecChart"></canvas></div>`;
   r2.appendChild(ecCard);
 
-  // Today's Picks
+  // Today's Picks — FIXED to match actual JSON schema
   const tpCard = h('div','card','');
   let tpHTML = `<h2>🏀 Today's Picks — ${tp.date || 'N/A'}</h2>`;
+  if (tp.games) {
+    tpHTML += `<div style="font-size:0.72rem;color:var(--muted);margin-bottom:14px;line-height:1.6">${tp.games}</div>`;
+  }
   if (tp.bets && tp.bets.length > 0) {
-    tpHTML += `<div style="font-size:0.75rem;color:var(--muted);margin-bottom:12px">${tp.games || ''}</div>`;
     tp.bets.forEach(b => {
-      const isSkip = b.status === 'SKIPPED';
-      const statusCls = `status-${b.result === 'W' ? 'W' : b.result === 'L' ? 'L' : b.status === 'PLACED' ? 'PLACED' : b.status === 'SKIPPED' ? 'SKIPPED' : 'PENDING'}`;
-      tpHTML += `<div style="padding:10px;margin-bottom:8px;background:var(--card2);border-radius:8px;border:1px solid var(--border)">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-          <strong style="font-size:0.85rem">${b.label}</strong>
-          <span class="status-pill ${statusCls}">${b.status}</span>
-        </div>`;
-      if (!isSkip && b.legs?.length > 0) {
-        tpHTML += `<div style="margin-bottom:6px">${b.legs.map(l => `<span class="leg-tag">${l}</span>`).join('')}</div>`;
-        tpHTML += `<div style="display:flex;gap:16px;font-size:0.75rem;color:var(--muted)">
-          <span>Risk: $${b.risk?.toFixed(2)||'0'}</span>
-          <span>Payout: $${b.payout?.toFixed(0)||'0'}</span>
-          <span>${b.multiplier?.toFixed(2)||'0'}x</span>
-        </div>`;
-      } else if (isSkip) {
-        tpHTML += `<div style="font-size:0.75rem;color:var(--muted)">No qualifying edges</div>`;
-      }
-      tpHTML += '</div>';
+      const edgeNum = parseFloat(String(b.edge).replace(/[+%]/g, ''));
+      const isHot = edgeNum >= 15;
+      tpHTML += `<div class="bet-card">
+        <div class="bet-card-header">
+          <div>
+            <div class="bet-card-pick">${b.pick || 'N/A'}</div>
+            <div class="bet-card-type">${b.type || ''} · ${b.price || ''}</div>
+          </div>
+          <span class="edge-badge${isHot ? ' hot' : ''}">${isHot ? '🔥 ' : ''}${b.edge || ''}</span>
+        </div>
+        ${b.thesis ? `<div class="bet-card-thesis">${b.thesis}</div>` : ''}
+        <div class="bet-card-stats">
+          <span>💵 Risk: $${(b.risk||0).toFixed(2)}</span>
+          <span>🎯 Payout: $${(b.payout||0).toFixed(0)}</span>
+          <span>📐 ${((b.payout||0)/(b.risk||1)).toFixed(2)}x</span>
+        </div>
+      </div>`;
     });
     if (tp.sessionExposure > 0) {
-      tpHTML += `<div style="font-size:0.75rem;color:var(--muted);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
-        Session exposure: $${tp.sessionExposure.toFixed(0)} (${tp.exposurePct.toFixed(1)}%) • Max profit: $${(tp.maxProfit||0).toFixed(0)}
+      const expColor = tp.exposurePct > 50 ? 'var(--amber)' : 'var(--muted)';
+      tpHTML += `<div style="font-size:0.75rem;color:${expColor};margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+        Session exposure: $${tp.sessionExposure.toFixed(0)} (${tp.exposurePct.toFixed(1)}%) · Max profit: $${(tp.maxProfit||0).toFixed(0)}
       </div>`;
+      if (tp.sizingNote) {
+        tpHTML += `<div style="font-size:0.7rem;color:var(--amber);margin-top:4px">⚠️ ${tp.sizingNote}</div>`;
+      }
     }
   } else {
     tpHTML += '<div style="color:var(--muted);font-size:0.85rem;padding:20px 0">No picks today</div>';
@@ -209,33 +228,66 @@ function render(d) {
   app.appendChild(r2);
 
   // Row 3: Scenarios + Injuries
-  if (scenarios.length > 0 || (tp.injuries && tp.injuries.length > 0)) {
-    const r3 = h('div','grid grid-2','');
-    r3.style.marginTop = '16px';
+  const r3 = h('div','grid grid-2','');
+  r3.style.marginTop = '16px';
 
-    const scCard = h('div','card','');
-    let scHTML = '<h2>🎲 Tonight\'s Scenarios</h2><div class="scenario-grid">';
-    scenarios.forEach((s, i) => {
-      const cls = i === 0 ? 'best' : i === scenarios.length - 1 ? 'worst' : '';
-      const icons = s.bets.map(b => b.result === 'W' ? '✅' : '❌').join('');
-      scHTML += `<div class="scenario-card ${cls}">
-        <div style="font-size:1.1rem;margin-bottom:4px">${icons}</div>
-        <div style="font-size:1.2rem;font-weight:700" class="${s.totalPL >= 0 ? 'positive' : 'negative'}">
-          ${s.totalPL >= 0 ? '+' : ''}$${s.totalPL.toFixed(2)}
-        </div>
-        <div style="font-size:0.75rem;color:var(--muted)">→ $${s.newBalance.toFixed(2)}</div>
-        <div style="font-size:0.65rem;margin-top:4px"><span class="badge badge-${phaseColors[s.phase]}" style="font-size:0.6rem">P${s.phase}</span></div>
-      </div>`;
+  // Scenarios — FIXED to match actual JSON schema {hits, pl, balance, phase, prob}
+  const scCard = h('div','card','');
+  let scHTML = '<h2>🎲 Tonight\'s Scenarios</h2><div class="scenario-grid">';
+  scenarios.forEach((s, i) => {
+    const cls = i === 0 ? 'best' : i === scenarios.length - 1 ? 'worst' : '';
+    const plColor = s.pl >= 0 ? 'positive' : 'negative';
+    scHTML += `<div class="scenario-card ${cls}">
+      <div style="font-size:0.85rem;font-weight:700;margin-bottom:4px">${s.hits || ''}</div>
+      <div style="font-size:1.2rem;font-weight:700" class="${plColor}">
+        ${s.pl >= 0 ? '+' : ''}$${(s.pl||0).toFixed(2)}
+      </div>
+      <div style="font-size:0.75rem;color:var(--muted)">→ $${(s.balance||0).toFixed(2)}</div>
+      <div style="font-size:0.65rem;margin-top:4px;color:var(--muted)">${s.phase || ''}</div>
+      ${s.prob ? `<div style="font-size:0.6rem;color:var(--muted);margin-top:2px">${s.prob}</div>` : ''}
+    </div>`;
+  });
+  scHTML += '</div>';
+  if (correlations.length > 0) {
+    scHTML += '<div style="margin-top:12px;padding-top:8px;border-top:1px solid var(--border)">';
+    correlations.forEach(c => {
+      scHTML += `<div class="corr-note">• ${c.note}</div>`;
     });
     scHTML += '</div>';
-    scCard.innerHTML = scHTML;
-    r3.appendChild(scCard);
+  }
+  scCard.innerHTML = scHTML;
+  r3.appendChild(scCard);
 
-    // Injuries
-    const injCard = h('div','card','');
-    let injHTML = '<h2>🏥 Injury Watch</h2>';
-    if (tp.injuries && tp.injuries.length > 0) {
-      tp.injuries.forEach(inj => {
+  // Injuries — FIXED: parse string format "🔴 Player (TEAM): STATUS — note"
+  const injCard = h('div','card','');
+  let injHTML = '<h2>🏥 Injury Watch</h2>';
+  if (tp.injuries && tp.injuries.length > 0) {
+    tp.injuries.forEach(inj => {
+      if (typeof inj === 'string') {
+        // Parse string format: "🔴 Player (TEAM): STATUS — note" or "✅ Player (TEAM): STATUS"
+        const iconMatch = inj.match(/^(🔴|✅|🟡)/);
+        const icon = iconMatch ? iconMatch[1] : '⚪';
+        const dotColor = icon === '🔴' ? 'var(--red)' : icon === '✅' ? 'var(--green)' : 'var(--amber)';
+        const cleaned = inj.replace(/^(🔴|✅|🟡)\s*/, '');
+        const parts = cleaned.split(':');
+        const playerPart = (parts[0] || '').trim();
+        const statusPart = (parts[1] || '').trim();
+        const nameMatch = playerPart.match(/^(.+?)\s*\(([^)]+)\)/);
+        const player = nameMatch ? nameMatch[1].trim() : playerPart;
+        const team = nameMatch ? nameMatch[2] : '';
+        const statusSplit = statusPart.split('—');
+        const status = (statusSplit[0] || '').trim();
+        const note = (statusSplit[1] || '').trim();
+        const statusColor = status.includes('OUT') ? 'red' : status.includes('PLAYING') || status.includes('RETURNING') ? 'green' : 'amber';
+        injHTML += `<div class="injury-row">
+          <div class="injury-dot" style="background:${dotColor}"></div>
+          <strong>${player}</strong>
+          ${team ? `<span style="color:var(--muted);font-size:0.75rem">(${team})</span>` : ''}
+          <span class="badge badge-${statusColor}" style="font-size:0.6rem;padding:2px 6px">${status}</span>
+          ${note ? `<span style="color:var(--muted);font-size:0.7rem">— ${note}</span>` : ''}
+        </div>`;
+      } else {
+        // Object format fallback
         const dotColor = inj.status === 'OUT' ? 'var(--red)' : inj.status === 'GTD' || inj.status === 'QUESTIONABLE' ? 'var(--amber)' : 'var(--green)';
         injHTML += `<div class="injury-row">
           <div class="injury-dot" style="background:${dotColor}"></div>
@@ -244,14 +296,14 @@ function render(d) {
           <span class="badge badge-${inj.status==='OUT'?'red':'amber'}" style="font-size:0.6rem">${inj.status}</span>
           ${inj.note ? `<span style="color:var(--muted);font-size:0.7rem">${inj.note}</span>` : ''}
         </div>`;
-      });
-    } else {
-      injHTML += '<div style="color:var(--muted);font-size:0.85rem;padding:16px 0">No injury data available — check MEMORY.md</div>';
-    }
-    injCard.innerHTML = injHTML;
-    r3.appendChild(injCard);
-    app.appendChild(r3);
+      }
+    });
+  } else {
+    injHTML += '<div style="color:var(--muted);font-size:0.85rem;padding:16px 0">No injury data available</div>';
   }
+  injCard.innerHTML = injHTML;
+  r3.appendChild(injCard);
+  app.appendChild(r3);
 
   // Row 4: Backtest Charts
   app.appendChild(h('div','section-title','📉 Model Performance'));
@@ -267,12 +319,10 @@ function render(d) {
   const r5 = h('div','grid grid-2','');
   r5.style.marginTop = '16px';
 
-  // Ablation
   const ablCard = h('div','card','');
   ablCard.innerHTML = `<h2>🔬 Feature Ablation Study</h2><div class="chart-wrap" style="height:260px"><canvas id="ablChart"></canvas></div>`;
   r5.appendChild(ablCard);
 
-  // Engine Features
   const engCard = h('div','card','');
   let engHTML = '<h2>⚙️ Engine Feature Stack</h2>';
   (eng.features || []).forEach(f => {
@@ -318,18 +368,18 @@ function render(d) {
   const r7 = h('div','grid grid-2','');
   r7.style.marginTop = '16px';
 
-  // Bet History
   const bhCard = h('div','card','');
   let bhHTML = '<h2>📋 Recent Bet History</h2><div style="overflow-x:auto"><table><thead><tr><th>#</th><th>Date</th><th>Type</th><th>Picks</th><th>Risk</th><th>P/L</th><th>Result</th></tr></thead><tbody>';
   bets.slice(-10).reverse().forEach(b => {
     const rc = b.result === 'W' ? 'positive' : b.result === 'L' ? 'negative' : '';
+    const plDisplay = b.pl != null ? (b.pl >= 0 ? '+' : '') + '$' + b.pl.toFixed(2) : '—';
     bhHTML += `<tr>
       <td>${b.id}</td>
       <td>${b.date?.split('-').slice(1).join('/')}</td>
       <td style="font-size:0.7rem">${b.type}</td>
       <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:0.7rem">${b.picks}</td>
-      <td>$${b.risk?.toFixed(0)}</td>
-      <td class="${rc}">${b.pl != null ? (b.pl >= 0 ? '+' : '') + '$' + b.pl.toFixed(2) : '—'}</td>
+      <td>$${(b.risk||0).toFixed(0)}</td>
+      <td class="${rc}">${plDisplay}</td>
       <td><span class="status-pill status-${b.result||'PENDING'}">${b.result||'⏳'}</span></td>
     </tr>`;
   });
@@ -340,11 +390,11 @@ function render(d) {
   // Strategy
   const strCard = h('div','card','');
   let strHTML = `<h2>📐 ${strat.name || 'Strategy'}</h2>`;
-  ['betA','betB','betC'].forEach(k => {
+  ['betA','betB','betC','betD','betE','betF'].forEach(k => {
     const b = strat[k];
     if (b) strHTML += `<div style="padding:8px 0;border-bottom:1px solid #1e293b44">
       <strong style="font-size:0.85rem">${b.name}</strong>
-      <div style="font-size:0.75rem;color:var(--muted)">${b.desc}${b.target ? ' • Target: '+b.target : ''}${b.cushion ? ' • Cushion: '+b.cushion : ''}</div>
+      <div style="font-size:0.75rem;color:var(--muted)">${b.desc}${b.target ? ' · Target: '+b.target : ''}${b.cushion ? ' · Cushion: '+b.cushion : ''}${b.maxRisk ? ' · Max: '+b.maxRisk : ''}</div>
     </div>`;
   });
   if (strat.killList) {
@@ -361,12 +411,16 @@ function render(d) {
 
   // Footer
   const footer = h('div','footer',`
-    Edge Engine ${m.engineVersion||'v2.3'} • Backtest: ${bt.versions?.length||0} versions, ${(bt.versions?.slice(-1)[0]?.winner||0).toFixed(1)}% winner accuracy •
-    Phase ${phase} ${phaseNames[phase]} • $${bal.toFixed(2)} / $${goal.toLocaleString()} goal
+    Edge Engine ${m.engineVersion||'v2.3'} · Backtest: ${bt.versions?.length||0} versions, ${(bt.versions?.slice(-1)[0]?.winner||0).toFixed(1)}% winner accuracy ·
+    Phase ${phase} ${phaseNames[phase]} · $${bal.toFixed(2)} / $${goal.toLocaleString()} goal
   `);
   app.appendChild(footer);
 
-  // --- CHARTS ---
+  // --- CHARTS (deferred to next frame for canvas readiness) ---
+  requestAnimationFrame(() => renderCharts(ec, bt, ablation));
+}
+
+function renderCharts(ec, bt, ablation) {
   const chartDefaults = {
     responsive: true, maintainAspectRatio: false,
     plugins: { legend: { labels: { color: '#94a3b8', font: { size: 10 } } } },
@@ -379,91 +433,129 @@ function render(d) {
   // Equity Curve
   if (ec.length > 0) {
     const ecCtx = document.getElementById('ecChart');
-    new Chart(ecCtx, {
-      type: 'line',
-      data: {
-        labels: ec.map(p => p.date?.split('-').slice(1).join('/')),
-        datasets: [{
-          label: 'Balance',
-          data: ec.map(p => p.balance),
-          borderColor: '#22c55e',
-          backgroundColor: '#22c55e22',
-          fill: true,
-          tension: 0.3,
-          pointRadius: 3,
-          pointBackgroundColor: '#22c55e',
-        }]
-      },
-      options: { ...chartDefaults,
-        plugins: { ...chartDefaults.plugins, legend: { display: false } },
-        scales: { ...chartDefaults.scales, y: { ...chartDefaults.scales.y, ticks: { ...chartDefaults.scales.y.ticks, callback: v => '$' + v } } }
-      }
-    });
+    if (ecCtx) {
+      new Chart(ecCtx, {
+        type: 'line',
+        data: {
+          labels: ec.map(p => {
+            const parts = (p.date || '').split('-');
+            return parts.length >= 3 ? parts[1] + '/' + parts[2] : p.date;
+          }),
+          datasets: [{
+            label: 'Balance',
+            data: ec.map(p => p.balance),
+            borderColor: '#22c55e',
+            backgroundColor: 'rgba(34,197,94,0.1)',
+            fill: true,
+            tension: 0.3,
+            pointRadius: 4,
+            pointBackgroundColor: '#22c55e',
+            pointBorderColor: '#22c55e',
+            borderWidth: 2,
+          }]
+        },
+        options: {
+          ...chartDefaults,
+          plugins: { ...chartDefaults.plugins, legend: { display: false } },
+          scales: {
+            ...chartDefaults.scales,
+            y: { ...chartDefaults.scales.y, ticks: { ...chartDefaults.scales.y.ticks, callback: v => '$' + v } }
+          }
+        }
+      });
+    }
   }
 
   // Backtest versions
   const versions = bt.versions || [];
   if (versions.length > 0) {
-    new Chart(document.getElementById('btChart'), {
-      type: 'bar',
-      data: {
-        labels: versions.map(v => v.version),
-        datasets: [
-          { label: 'Overall', data: versions.map(v => v.winner), backgroundColor: '#3b82f6' },
-          { label: 'HIGH', data: versions.map(v => v.high), backgroundColor: '#22c55e' },
-          { label: 'MED', data: versions.map(v => v.med), backgroundColor: '#f59e0b' },
-        ]
-      },
-      options: { ...chartDefaults, scales: { ...chartDefaults.scales, y: { ...chartDefaults.scales.y, min: 40, max: 90 } } }
-    });
+    const btCtx = document.getElementById('btChart');
+    if (btCtx) {
+      new Chart(btCtx, {
+        type: 'bar',
+        data: {
+          labels: versions.map(v => v.version),
+          datasets: [
+            { label: 'Overall', data: versions.map(v => v.winner), backgroundColor: '#3b82f6' },
+            { label: 'HIGH', data: versions.map(v => v.high), backgroundColor: '#22c55e' },
+            { label: 'MED', data: versions.map(v => v.med), backgroundColor: '#f59e0b' },
+          ]
+        },
+        options: { ...chartDefaults, scales: { ...chartDefaults.scales, y: { ...chartDefaults.scales.y, min: 40, max: 90 } } }
+      });
+    }
   }
 
   // Calibration
   const cal = bt.calibration || [];
   if (cal.length > 0) {
     const expected = [55, 65, 75, 85];
-    new Chart(document.getElementById('calChart'), {
-      type: 'bar',
-      data: {
-        labels: cal.map(c => c.bin),
-        datasets: [
-          { label: 'Actual', data: cal.map(c => c.actual), backgroundColor: '#3b82f6' },
-          { label: 'Expected', data: expected.slice(0, cal.length), backgroundColor: '#64748b44', borderColor: '#64748b', borderWidth: 1 },
-        ]
-      },
-      options: { ...chartDefaults, scales: { ...chartDefaults.scales, y: { ...chartDefaults.scales.y, min: 40, max: 100 } } }
-    });
+    const calCtx = document.getElementById('calChart');
+    if (calCtx) {
+      new Chart(calCtx, {
+        type: 'bar',
+        data: {
+          labels: cal.map(c => c.bin),
+          datasets: [
+            { label: 'Actual', data: cal.map(c => c.actual), backgroundColor: '#3b82f6' },
+            { label: 'Expected', data: expected.slice(0, cal.length), backgroundColor: '#64748b44', borderColor: '#64748b', borderWidth: 1 },
+          ]
+        },
+        options: { ...chartDefaults, scales: { ...chartDefaults.scales, y: { ...chartDefaults.scales.y, min: 40, max: 100 } } }
+      });
+    }
   }
 
   // Monthly trend
   const mt = bt.monthlyTrend || [];
   if (mt.length > 0) {
-    new Chart(document.getElementById('trendChart'), {
-      type: 'line',
-      data: {
-        labels: mt.map(m => m.month),
-        datasets: [{ label: 'Accuracy', data: mt.map(m => m.pct), borderColor: '#a855f7', backgroundColor: '#a855f722', fill: true, tension: 0.3, pointRadius: 4, pointBackgroundColor: '#a855f7' }]
-      },
-      options: { ...chartDefaults, scales: { ...chartDefaults.scales, y: { ...chartDefaults.scales.y, min: 50, max: 85 } },
-        plugins: { ...chartDefaults.plugins, legend: { display: false } } }
-    });
+    const trendCtx = document.getElementById('trendChart');
+    if (trendCtx) {
+      new Chart(trendCtx, {
+        type: 'line',
+        data: {
+          labels: mt.map(m => m.month),
+          datasets: [{
+            label: 'Accuracy', data: mt.map(m => m.pct),
+            borderColor: '#a855f7', backgroundColor: '#a855f722',
+            fill: true, tension: 0.3, pointRadius: 4, pointBackgroundColor: '#a855f7'
+          }]
+        },
+        options: {
+          ...chartDefaults,
+          scales: { ...chartDefaults.scales, y: { ...chartDefaults.scales.y, min: 50, max: 85 } },
+          plugins: { ...chartDefaults.plugins, legend: { display: false } }
+        }
+      });
+    }
   }
 
   // Ablation
   if (ablation.length > 0) {
     const sorted = [...ablation].sort((a, b) => a.winner - b.winner);
-    new Chart(document.getElementById('ablChart'), {
-      type: 'bar',
-      data: {
-        labels: sorted.map(a => a.config.replace(/_/g, ' ')),
-        datasets: [{ label: 'Winner %', data: sorted.map(a => a.winner), backgroundColor: sorted.map(a => a.delta >= 0 ? '#22c55e88' : '#ef444488'), borderColor: sorted.map(a => a.delta >= 0 ? '#22c55e' : '#ef4444'), borderWidth: 1 }]
-      },
-      options: {
-        ...chartDefaults, indexAxis: 'y',
-        scales: { x: { ...chartDefaults.scales.x, min: 58, max: 70 }, y: { ...chartDefaults.scales.y, ticks: { ...chartDefaults.scales.y.ticks, font: { size: 9 } } } },
-        plugins: { ...chartDefaults.plugins, legend: { display: false } }
-      }
-    });
+    const ablCtx = document.getElementById('ablChart');
+    if (ablCtx) {
+      new Chart(ablCtx, {
+        type: 'bar',
+        data: {
+          labels: sorted.map(a => a.config.replace(/_/g, ' ')),
+          datasets: [{
+            label: 'Winner %', data: sorted.map(a => a.winner),
+            backgroundColor: sorted.map(a => a.delta >= 0 ? '#22c55e88' : '#ef444488'),
+            borderColor: sorted.map(a => a.delta >= 0 ? '#22c55e' : '#ef4444'),
+            borderWidth: 1
+          }]
+        },
+        options: {
+          ...chartDefaults, indexAxis: 'y',
+          scales: {
+            x: { ...chartDefaults.scales.x, min: 58, max: 70 },
+            y: { ...chartDefaults.scales.y, ticks: { ...chartDefaults.scales.y.ticks, font: { size: 9 } } }
+          },
+          plugins: { ...chartDefaults.plugins, legend: { display: false } }
+        }
+      });
+    }
   }
 }
 
