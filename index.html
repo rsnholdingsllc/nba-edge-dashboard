@@ -190,7 +190,7 @@ async function init() {
 
 function render(d) {
   const app = $('#app');
-  app.innerHTML = '';
+  let H = ''; // Build entire page as one string
 
   const a = d.account || {};
   const m = d.meta || {};
@@ -215,9 +215,10 @@ function render(d) {
   const pctToGoal = Math.min(100, bal / goal * 100);
   const winRate = (wins + losses) > 0 ? (wins / (wins + losses) * 100) : 0;
   const latestBT = bt.versions?.slice(-1)[0] || {};
+  const tpBets = tp.bets || [];
 
   // ===== HEADER =====
-  app.innerHTML += `
+  H += `
   <div class="header">
     <div class="logo">
       <div class="logo-icon">📊</div>
@@ -234,7 +235,7 @@ function render(d) {
   </div>`;
 
   // ===== HERO STATS =====
-  app.innerHTML += `
+  H += `
   <div class="grid g4">
     <div class="card">
       <div class="card-label">Balance</div>
@@ -260,7 +261,7 @@ function render(d) {
   </div>`;
 
   // ===== EQUITY CURVE + RECENT RESULTS =====
-  app.innerHTML += `
+  H += `
   <div class="grid g2 mt">
     <div class="card">
       <div class="card-label">Equity Curve</div>
@@ -288,25 +289,19 @@ function render(d) {
     </div>
   </div>`;
 
-  // ===== TODAY'S PICKS + WHAT-IF =====
-  const tpBets = tp.bets || [];
-  app.innerHTML += `<div class="section-head">Today's Card — ${tp.date || 'N/A'}</div>`;
+  // ===== TODAY'S PICKS + WHAT-IF (all as HTML string) =====
+  H += `<div class="section-head">Today's Card — ${tp.date || 'N/A'}</div>`;
   if (tp.games) {
-    app.innerHTML += `<div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:12px">${tp.games}</div>`;
+    H += `<div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:12px">${tp.games}</div>`;
   }
 
-  const picksAndWhatIf = document.createElement('div');
-  picksAndWhatIf.className = 'grid g2';
-
+  H += `<div class="grid g2"><div>`;
   // Left: Bet cards
-  const picksCol = document.createElement('div');
   tpBets.forEach((b, i) => {
     const edgeNum = parseFloat(String(b.edge).replace(/[+%]/g, ''));
     const isHot = edgeNum >= 15;
     const multi = ((b.payout||0)/(b.risk||1)).toFixed(2);
-    const div = document.createElement('div');
-    div.className = 'bet';
-    div.innerHTML = `
+    H += `<div class="bet">
       <div class="bet-top">
         <div>
           <div class="bet-pick">${b.pick || 'N/A'}</div>
@@ -327,28 +322,25 @@ function render(d) {
           <button class="toggle-btn active-p" data-bet="${i}" data-val="P" onclick="toggleBet(${i},'P')">TBD</button>
           <button class="toggle-btn" data-bet="${i}" data-val="L" onclick="toggleBet(${i},'L')">Loss</button>
         </div>
-      </div>`;
-    picksCol.appendChild(div);
+      </div>
+    </div>`;
   });
 
   // Exposure bar
   if (tp.sessionExposure > 0) {
     const expPct = tp.exposurePct || 0;
     const expColor = expPct > 50 ? (expPct > 80 ? 'var(--red)' : 'var(--amber)') : 'var(--green)';
-    const expDiv = document.createElement('div');
-    expDiv.className = 'exposure-bar';
-    expDiv.innerHTML = `
+    H += `<div class="exposure-bar">
       <div class="exposure-labels"><span>Session Exposure</span><span style="color:${expColor};font-weight:600">$${tp.sessionExposure.toFixed(0)} (${expPct.toFixed(1)}%)</span></div>
       <div class="exposure-track"><div class="exposure-fill" style="width:${Math.min(100,expPct)}%;background:${expColor}"></div></div>
       <div class="exposure-labels"><span>Max profit: $${(tp.maxProfit||0).toFixed(0)}</span><span>Phase ${phase} max: ${phase===1?'20%':phase===2?'25%':'30%'}</span></div>
-      ${tp.sizingNote ? `<div style="font-size:0.68rem;color:var(--amber);margin-top:6px">⚠️ ${tp.sizingNote}</div>` : ''}`;
-    picksCol.appendChild(expDiv);
+      ${tp.sizingNote ? `<div style="font-size:0.68rem;color:var(--amber);margin-top:6px">⚠️ ${tp.sizingNote}</div>` : ''}
+    </div>`;
   }
-  picksAndWhatIf.appendChild(picksCol);
+  H += `</div><div>`;
 
   // Right: What-If panel + scenarios
-  const whatIfCol = document.createElement('div');
-  whatIfCol.innerHTML = `
+  H += `
   <div class="whatif" id="whatif-panel">
     <div class="whatif-title"><span style="font-size:1rem">🎮</span> What-If Simulator</div>
     <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:16px">Toggle each bet to Win or Loss to see your projected outcome</div>
@@ -375,15 +367,12 @@ function render(d) {
     </div>
     ${correlations.length > 0 ? `<div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border)">${correlations.map(c => `<div class="corr">• ${c.note}</div>`).join('')}</div>` : ''}
   </div>`;
-  picksAndWhatIf.appendChild(whatIfCol);
-  app.appendChild(picksAndWhatIf);
+  H += `</div></div>`;
 
   // ===== INJURIES =====
   const injuries = tp.injuries || [];
   if (injuries.length > 0) {
-    const injSec = document.createElement('div');
-    injSec.className = 'card mt';
-    let injHTML = '<div class="card-label">Injury Watch</div><div class="grid g2" style="gap:2px 24px">';
+    H += `<div class="card mt"><div class="card-label">Injury Watch</div><div class="grid g2" style="gap:2px 24px">`;
     injuries.forEach(inj => {
       if (typeof inj === 'string') {
         const icon = inj.match(/^(🔴|✅|🟡)/)?.[1] || '⚪';
@@ -398,7 +387,7 @@ function render(d) {
         const note = notes.join('—').trim();
         const statusClean = (status || '').trim();
         const sc = statusClean.includes('OUT') ? 'red' : statusClean.includes('PLAYING') || statusClean.includes('RETURNING') ? 'green' : 'amber';
-        injHTML += `<div class="inj">
+        H += `<div class="inj">
           <div class="inj-dot" style="background:${dotColor}"></div>
           <strong>${player}</strong>
           <span style="color:var(--text-muted);font-size:0.72rem">${team}</span>
@@ -407,14 +396,12 @@ function render(d) {
         </div>`;
       }
     });
-    injHTML += '</div>';
-    injSec.innerHTML = injHTML;
-    app.appendChild(injSec);
+    H += `</div></div>`;
   }
 
   // ===== MODEL PERFORMANCE =====
-  app.innerHTML += `<div class="section-head">Model Performance</div>`;
-  app.innerHTML += `
+  H += `<div class="section-head">Model Performance</div>`;
+  H += `
   <div class="grid g3">
     <div class="card"><div class="card-label">Model Evolution</div><div class="chart-box"><canvas id="btChart"></canvas></div></div>
     <div class="card"><div class="card-label">Calibration</div><div class="chart-box"><canvas id="calChart"></canvas></div></div>
@@ -422,7 +409,7 @@ function render(d) {
   </div>`;
 
   // ===== ABLATION + ENGINE =====
-  app.innerHTML += `
+  H += `
   <div class="grid g2 mt">
     <div class="card"><div class="card-label">Feature Ablation</div><div class="chart-box" style="height:240px"><canvas id="ablChart"></canvas></div></div>
     <div class="card"><div class="card-label">Engine Stack</div>
@@ -439,14 +426,14 @@ function render(d) {
   // ===== PROPS =====
   const propData = props.strong65 || [];
   if (propData.length > 0) {
-    app.innerHTML += `<div class="section-head">Prop Backtest (65%+ Confidence)</div>`;
+    H += `<div class="section-head">Prop Backtest (65%+ Confidence)</div>`;
     const cats = [
       {name:'Points',icon:'🏀',f:p=>p.prop.includes('PTS')},
       {name:'Rebounds',icon:'📏',f:p=>p.prop.includes('REB')},
       {name:'Assists',icon:'🤝',f:p=>p.prop.includes('AST')},
       {name:'Threes',icon:'🎯',f:p=>p.prop.includes('3PT')},
     ];
-    app.innerHTML += `<div class="grid g4">${cats.map(cat => {
+    H += `<div class="grid g4">${cats.map(cat => {
       const items = propData.filter(cat.f);
       return `<div class="card"><div class="card-label">${cat.icon} ${cat.name}</div>
         ${items.map(p => {
@@ -462,8 +449,8 @@ function render(d) {
   }
 
   // ===== STRATEGY =====
-  app.innerHTML += `<div class="section-head">Strategy — ${strat.name || ''}</div>`;
-  app.innerHTML += `
+  H += `<div class="section-head">Strategy — ${strat.name || ''}</div>`;
+  H += `
   <div class="grid g2">
     <div class="card">
       <div class="card-label">Bet Types</div>
@@ -483,7 +470,10 @@ function render(d) {
   </div>`;
 
   // ===== FOOTER =====
-  app.innerHTML += `<div class="footer">Edge Engine ${m.engineVersion||'v2.3'} · ${(latestBT.winner||0).toFixed(1)}% model accuracy · Phase ${phase} ${phaseName} · $${bal.toFixed(2)} / $${goal.toLocaleString()}</div>`;
+  H += `<div class="footer">Edge Engine ${m.engineVersion||'v2.3'} · ${(latestBT.winner||0).toFixed(1)}% model accuracy · Phase ${phase} ${phaseName} · $${bal.toFixed(2)} / $${goal.toLocaleString()}</div>`;
+
+  // ===== SET ONCE =====
+  app.innerHTML = H;
 
   // ===== CHARTS =====
   requestAnimationFrame(() => renderCharts(ec, bt, ablation));
